@@ -1,0 +1,40 @@
+{
+    admin off
+    http_port 3000
+    https_port 3443
+}
+
+:3443 {
+    handle /health_check {
+        respond "ok" 200
+    }
+
+    handle {
+        root * /srv
+
+        file_server
+
+        try_files {path} {path}/ /index.html
+
+        header {
+            # enable HSTS
+            Strict-Transport-Security max-age=31536000;
+
+            # disable clients from sniffing the media type
+            X-Content-Type-Options nosniff
+
+            # clickjacking protection
+            X-Frame-Options DENY
+
+            # keep referrer data off of HTTP connections
+            Referrer-Policy no-referrer-when-downgrade
+        }
+    }
+    tls /etc/caddy/https/tls.crt /etc/caddy/https/tls.key
+}
+
+:4000 {
+    handle /metrics {
+        metrics
+    }
+}
